@@ -1,6 +1,7 @@
 <?php
 namespace Home\Controller;
 use Think\Controller;
+use MyVendor\QRCode\QrReader;
 class UserController extends Controller {
 	public function index(){
 		echo 'hello, thinkphp';
@@ -194,6 +195,116 @@ class UserController extends Controller {
     	}
     }
 
+    public function imageProcess(){
+        if (session('?logined')) {
+            if (IS_AJAX) {
+                $ajaxReturn['telephone'] = trim(I('telephone'));
+                $ajaxReturn['email'] = trim(I('email'));
+                $fileType = $_FILES['file']['type'];
+                $config = array(
+                    'maxSize'    =>    3145728,
+                    'rootPath'   =>    './Public/Home/imageProcess/',
+                    'savePath'   =>    'images/',
+                    'saveName'   =>    array('uniqid',''),
+                    'exts'       =>    array('jpg', 'gif', 'png', 'jpeg'),
+                    'autoSub'    =>    true,
+                    'subName'    =>    array('date','Ymd'),
+                );
+                $upload = new \Think\Upload($config);
+                if ((($fileType !== 'image/jpeg') && ($fileType !== 'image/pjpeg') && ($fileType !== 'image/gif'))) {
+                    $ajaxReturn['status'] = -1;
+                    $this->ajaxReturn($ajaxReturn,'json');
+                }
+                if ($info = $upload->upload()) {
+                    $data['username'] = session('loginName');
+                    $data['file_origin_name'] = $info['file']['name'];
+                    $data['file_save_name'] = $info['file']['savename'];
+                    $data['file_save_path'] = $info['file']['savepath'];
+                    $data['uploadtime'] = date('Y-m-d H:i:s', time());
+                    $imageprocessModel = M('imageprocess');
+                    if ($imageprocessModel->data($data)->add()) {
+                        $ajaxReturn['status'] = 1;
+                        $ajaxReturn['indexName'] = $data['file_save_name'];
+                    }
+                    else{
+                        $ajaxReturn['status'] = 0;
+                    }
+                }
+                else{
+                    $ajaxReturn['status'] = -1;
+                }
+                $ajaxReturn = array_merge($ajaxReturn, $data);
+                $this->ajaxReturn($ajaxReturn,'json');
+            }
+            else{
+                $this->display();
+            }
+        }
+        else{
+            $this->success('您还未登录！', U('login'));
+        }
+    }
+
+    public function ajaxProcess(){
+        if (session('?logined')){
+            if (IS_AJAX) {
+                $data['imgType'] = trim(I('imgType'));
+                $data['imgPath'] = trim(I('imgPath'));
+                $data['indexName'] = trim(I('indexName'));
+                $data['realPath'] = realpath(preg_replace("/^\/testbench\/tp/",".",$data['imgPath']));
+                $imageprocessModel = M('imageprocess');
+                switch ($data['imgType']) {
+                    /*二维码识别*/
+                    case 'QRCode':
+                        $dataInsert['file_type'] = '二维码';
+                        $condition = $data['indexName'];
+                        $qrcode = new QrReader($data['realPath']);
+                        $data['result'] = $qrcode->text();
+                        $dataInsert['file_detect_result'] = $data['result'];
+                        $imageprocessModel->where("file_save_name = '%s'",array($condition))->save($dataInsert);
+                        if (false===$data['result']) {
+                            $data['status'] = 0;
+                            $this->ajaxReturn($data,'json');
+                        }
+                        else{
+                            $data['status'] = 1;
+                            $this->ajaxReturn($data,'json');
+                        }
+                        break;
+                    /*人脸识别（还未上线）*/
+                    case 'face':
+                        $dataInsert['file_type'] = '人脸图像';
+                        $condition = $data['indexName'];
+                        $data['result'] = faceDetect('host'.$data['imgPath']);
+                        $dataInsert['file_detect_result'] = $data['result'];
+                        $imageprocessModel->where("file_save_name = '%s'",array($condition))->save($dataInsert);
+                        if ('Null'===$data['result']) {
+                            $data['status'] = 0;
+                            $this->ajaxReturn($data,'json');
+                        }
+                        else{
+                            $data['status'] = 1;
+                            $this->ajaxReturn($data,'json');
+                        }
+                        break;
+
+                    default:
+                        # code...
+                        break;
+                }
+                $data['status'] = 0;
+                $data['result'] = 'Null';
+                $this->ajaxReturn($data,'json');
+            }
+            else{
+                $this->display('imageProcess');
+            }
+        }
+        else{
+            $this->success('您还未登录！', U('login'));
+        }
+    }
+
     public function logout(){
     	if (session('?logined')) {
     		session(null);
@@ -206,8 +317,8 @@ class UserController extends Controller {
     }    
 
     public function test(){
-    	testCommon();
-        echo '<br>haha';
+    	$qrcode = new QrReader('./qrcode.png');
+        print $text = $qrcode->text();
     }
 
     public function testdb($name='luuuyi', $password='123456'){

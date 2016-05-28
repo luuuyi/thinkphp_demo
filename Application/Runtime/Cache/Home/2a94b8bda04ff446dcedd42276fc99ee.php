@@ -44,7 +44,7 @@
 	      <a class="navbar-brand" href="/testbench/tp/index.php/Home/Index/index">留言板系统</a>
 	   </div>
 	   <div class="collapse navbar-collapse" id="example-navbar-collapse">
-	      <ul class="nav navbar-nav">
+	    <ul class="nav navbar-nav">
 	         <li class="active"><a href="/testbench/tp/index.php/Home/Index/index">留言板列表</a></li>
 	         <li><a href="/testbench/tp/index.php/Home/User/writeMessage">编写留言</a></li>
 	         <li><a href="/testbench/tp/index.php/Home/User/userInfo">修改信息</a></li>
@@ -55,14 +55,17 @@
 	            <ul class="dropdown-menu">
 	               <li><a href="/testbench/tp/index.php/Home/User/uploadFile">上传文件</a></li>
 	               <li><a href="/testbench/tp/index.php/Home/Index/fileList">上传文件列表</a></li>
-	               <li><a href="#">Jasper Report</a></li>
+	               <li><a href="#">图像识别</a></li>
 	               <li class="divider"></li>
 	               <li><a href="#">分离的链接</a></li>
 	               <li class="divider"></li>
 	               <li><a href="#">另一个分离的链接</a></li>
 	            </ul>
 	         </li>
-	      </ul>
+	    </ul>
+      	<a type="button" class="btn btn-default navbar-btn navbar-right" href="/testbench/tp/index.php/Home/User/logout">
+	     	注销
+	    </a> 
 	   </div>
 	</nav>
 
